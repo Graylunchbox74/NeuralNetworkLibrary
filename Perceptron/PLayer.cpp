@@ -4,9 +4,15 @@
 
 PLayer::PLayer(unsigned int previous_layers_node_count, unsigned int node_count, Activation::Activation_Function activation_function)
 {
+	std::vector<float> neuron_w(previous_layers_node_count + 1);
+
 	for (int i = 0; i < node_count; ++i)
 	{
-		this->neurons.push_back(PNeuron(previous_layers_node_count + 1, node_count));
+		for (int x = 0; x < previous_layers_node_count + 1; ++x)
+		{
+			neuron_w[x] = ((float)(rand() % 2000) - 1000) / 1000;
+		}
+		this->neuron_weights.push_back(neuron_w);
 	}
 
 	switch(activation_function)
@@ -37,20 +43,27 @@ PLayer::PLayer(unsigned int previous_layers_node_count, unsigned int node_count,
 auto PLayer::Activate_Layer(std::vector<float> input) -> std::vector<float>
 {
 	std::vector<float> output;
-	for (int i = 0; i < this->neurons.size(); ++i)
+	for (int i = 0; i < this->neuron_weights.size(); ++i)
 	{
-		output.push_back(this->neurons[i].Activate(input));
-		this->neurons[i].value = this->activation_function(output[i]);
-		output[i] = this->neurons[i].value;
+		this->pre_activation_function_values[i] = 0;
+		for (int x = 0; x < this->neuron_weights[i].size(); ++x)
+		{
+			this->pre_activation_function_values[i] += input[x] * this->neuron_weights[i][x];
+		}
+		this->neuron_values[i] = this->activation_function(this->pre_activation_function_values[i]);
+		output.push_back(this->neuron_values[i]);
 	}
 	return output;
 }
 
 auto PLayer::set_weights(std::vector<std::vector<float> > new_weights) -> void
 {
-	for (int i = 0; i < this->neurons.size(); ++i)
+	for (int i = 0; i < this->neuron_weights.size(); ++i)
 	{
-		this->neurons[i].change_weights(new_weights[i]);
+		for (int x = 0; x < this->neuron_weights[i].size(); ++x)
+		{
+			this->neuron_weights[i][x] += new_weights[i][x];
+		}
 	}
 }
 

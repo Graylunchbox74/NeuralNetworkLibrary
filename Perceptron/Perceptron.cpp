@@ -124,7 +124,7 @@ auto NN::Perceptron::Train(std::vector<std::vector<float>>& input, std::vector<s
 	}
 
 	this->cost /= input.size();
-	this->cost /= layers[layers.size()-1].neurons.size();
+	this->cost /= layers[layers.size()-1].neuron_weights.size();
 }
 
 auto NN::Perceptron::back_propagate_delta(std::vector<float>& expectedOutput) -> void
@@ -132,20 +132,20 @@ auto NN::Perceptron::back_propagate_delta(std::vector<float>& expectedOutput) ->
 	//change the weights
 	for (int i = layers.size()-1; i > 0; --i)
 	{
-		for (int x = 0; x < layers[i].neurons.size(); ++x)
+		for (int x = 0; x < layers[i].neuron_weights.size(); ++x)
 		{
 			if (i != layers.size()-1)
 			{
-				layers[i].neurons[x].delta = 0;
-				for (int q = 0; q < layers[i+1].neurons.size(); ++q)
+				layers[i].deltas[x] = 0;
+				for (int q = 0; q < layers[i+1].neuron_weights.size(); ++q)
 				{
-					layers[i].neurons[x].delta += layers[i+1].neurons[q].delta * this->layers[i].activation_function_derivative(layers[i+1].neurons[q].pre_activation_function_value) * layers[i+1].neurons[q].weights[x];
+					layers[i].deltas[x] += layers[i+1].deltas[q] * this->layers[i].activation_function_derivative(layers[i+1].pre_activation_function_values[q]) * layers[i+1].neuron_weights[q][x];
 				}
 			}
 			else
 			{
 				// Last Layer
-				layers[i].neurons[x].delta = 2*(layers[i].neurons[x].value - expectedOutput[x]);
+				layers[i].deltas[x] = 2*(layers[i].neuron_values[x] - expectedOutput[x]);
 			}
 		}
 	}
@@ -178,34 +178,34 @@ auto NN::Perceptron::back_propagate(std::vector<std::vector<std::vector<float>>>
 		if (i == 0)
 		{
 			// Input layer
-			for (int x = 0; x < layers[i].neurons.size(); ++x)
+			for (int x = 0; x < layers[i].neuron_weights.size(); ++x)
 			{
-				for (int y = 0; y < layers[i].neurons[x].weights.size() + 1; ++y)
+				for (int y = 0; y < layers[i].neuron_weights[x].size() + 1; ++y)
 				{
 					if (y == 0)
 					{
-						changeWeights[i][x][y] = -1*(learning_rate*(layers[i].neurons[x].delta * this->layers[i].activation_function_derivative(layers[i].neurons[x].pre_activation_function_value) * 1));
+						changeWeights[i][x][y] = -1*(learning_rate*(layers[i].deltas[x] * this->layers[i].activation_function_derivative(layers[i].pre_activation_function_values[x]) * 1));
 					}
 					else
 					{
-						changeWeights[i][x][y] = -1*(learning_rate*(layers[i].neurons[x].delta * this->layers[i].activation_function_derivative(layers[i].neurons[x].pre_activation_function_value) * input[y - 1]));
+						changeWeights[i][x][y] = -1*(learning_rate*(layers[i].deltas[x] * this->layers[i].activation_function_derivative(layers[i].pre_activation_function_values[x]) * input[y - 1]));
 					}
 				}
 			}			
 		}
 		else
 		{
-			for (int x = 0; x < layers[i].neurons.size(); ++x)
+			for (int x = 0; x < layers[i].neuron_weights.size(); ++x)
 			{
-				for (int y = 0; y < layers[i].neurons[x].weights.size() + 1; ++y)
+				for (int y = 0; y < layers[i].neuron_weights[x].size() + 1; ++y)
 				{
 					if (y == 0)
 					{
-						changeWeights[i][x][y] = -1*(learning_rate*(layers[i].neurons[x].delta * this->layers[i].activation_function_derivative(layers[i].neurons[x].pre_activation_function_value) * 1));
+						changeWeights[i][x][y] = -1*(learning_rate*(layers[i].deltas[x] * this->layers[i].activation_function_derivative(layers[i].pre_activation_function_values[x]) * 1));
 					}
 					else
 					{
-						changeWeights[i][x][y] = -1*(learning_rate*(layers[i].neurons[x].delta * this->layers[i].activation_function_derivative(layers[i].neurons[x].pre_activation_function_value) * layers[i-1].neurons[y - 1].value));
+						changeWeights[i][x][y] = -1*(learning_rate*(layers[i].deltas[x] * this->layers[i].activation_function_derivative(layers[i].pre_activation_function_values[x]) * layers[i-1].neuron_values[y-1]));
 					}
 				}
 			}
