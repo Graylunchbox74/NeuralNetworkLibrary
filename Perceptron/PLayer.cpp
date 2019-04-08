@@ -13,6 +13,9 @@ PLayer::PLayer(unsigned int previous_layers_node_count, unsigned int node_count,
 			neuron_w[x] = ((float)(rand() % 2000) - 1000) / 1000;
 		}
 		this->neuron_weights.push_back(neuron_w);
+        this->pre_activation_function_values.push_back(0);
+        this->neuron_values.push_back(0);
+        this->deltas.push_back(0);
 	}
 
 	switch(activation_function)
